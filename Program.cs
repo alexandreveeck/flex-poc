@@ -46,8 +46,8 @@ class Program
 
                 var token = await flexClient.Authenticate();
 
-                Console.WriteLine($"Token generated: {token.AccessToken} ");
-                var authMessage = $"[[\"authenticate\", {{\"authorization\": \"Bearer {token.AccessToken}\"}}]]";
+                var authMessage = $"[\"[\\\"authenticate\\\",{{\\\"authorization\\\":\\\"Bearer {token.AccessToken}\\\"}}]\"]\r\n";
+                Console.WriteLine($"AuthMessage: {authMessage} ");
 
                 var authBuffer = Encoding.UTF8.GetBytes(authMessage);
                 var authSegment = new ArraySegment<byte>(authBuffer);
@@ -64,8 +64,9 @@ class Program
             }
             else if (message.StartsWith("a["))
             {
-                var eventData = JArray.Parse(message.Substring(1, message.Length - 2));
-                Console.WriteLine("Event received: " + eventData.ToString());
+                Console.WriteLine(message);
+                //var eventData = JArray.Parse(message.Substring(1, message.Length - 2));
+                //Console.WriteLine("Event received: " + eventData.ToString());
             }
         }
         Console.WriteLine("Connection was closed.");
