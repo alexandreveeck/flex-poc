@@ -1,8 +1,10 @@
 ﻿using FlexNetCore;
 using FlexNetCore.Models.Auth;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using PocFlex.Models;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.RegularExpressions;
 
 class Program
 {
@@ -65,10 +67,53 @@ class Program
             else if (message.StartsWith("a["))
             {
                 Console.WriteLine(message);
-                //var eventData = JArray.Parse(message.Substring(1, message.Length - 2));
-                //Console.WriteLine("Event received: " + eventData.ToString());
+
+                try
+                {
+                    string pattern = @"\{[^{}]*\}";
+
+                    Match match = Regex.Match(message, pattern);
+                    string cleanedInput = match.Value.Replace("\\", "");
+
+                    var userUpdate = JsonConvert.DeserializeObject<UserUpdate>(cleanedInput);
+
+                    string? profileId = GetProfileId(userUpdate);
+
+                    if (String.IsNullOrEmpty(profileId))
+                    {
+                        Console.WriteLine("Profile invalid");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"ProfileId: {profileId}");
+                    }
+
+                    Console.WriteLine(JsonConvert.SerializeObject(userUpdate));
+                }
+                catch (Exception e) 
+                {
+                    Console.WriteLine("Error: ", e.Message);
+                }
             }
         }
         Console.WriteLine("Connection was closed.");
+    }
+
+    private static string? GetProfileId(UserUpdate response)
+    {
+        if(response.Type == UserUpdateType.Forced)
+        {
+            return response.ForcePbxProfileId;
+        }
+        else if(response.Type == UserUpdateType.Calendar)
+        {
+            return response.SchedulePbxProfileId;
+        }
+        else if(response.Type == UserUpdateType.Override)
+        {
+            return response.DefaultPbxProfileId;
+        }
+
+        return null;
     }
 }
